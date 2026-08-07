@@ -1,0 +1,10 @@
+---
+- name: PREPARE | Template for /etc/hosts file for home lab
+  ansible.builtin.template:
+     src: hosts.j2
+     dest: /etc/hosts
+     mode: 0644
+     owner: root
+     group: root
+     setype: net_conf_t
+

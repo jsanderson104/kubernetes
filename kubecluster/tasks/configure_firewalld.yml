@@ -1,0 +1,20 @@
+---
+- name: PREPARE | Add ports to Firewall
+  loop:
+     - 6443/tcp
+     - 2379/tcp
+     - 2380/tcp
+     - 10250/tcp
+     - 10251/tcp
+     - 10252/tcp
+     - 10255/tcp
+     - 5473/tcp
+  ansible.posix.firewalld:
+    state: enabled
+    permanent: true
+    port: "{{item}}"
+
+- name: PREPARE | Restart Firewalld service
+  ansible.builtin.service:
+    name: firewalld
+    state: restarted

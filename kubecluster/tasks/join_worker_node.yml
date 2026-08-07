@@ -1,0 +1,10 @@
+---
+- name: JOIN | Nodes to Control-Plane
+  when: " inventory_hostname in groups['workers'] "
+  ansible.builtin.shell: kubeadm join {{control_plane}}:6443 --discovery-token-unsafe-skip-ca-verification  --token {{hostvars['control']['join_token']}} 2>&1|tee /var/log/kube-join.log
+  register: cmd
+
+- name: DEBUG | JOIN output
+  when: " inventory_hostname in groups['workers'] "
+  ansible.builtin.debug:
+     var: cmd.stdout

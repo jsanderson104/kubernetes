@@ -1,0 +1,68 @@
+---
+# tasks file for kubecluster
+#
+- name: Import Hostname reset
+  when: v_reset_hostnames is true
+  ansible.builtin.import_tasks: reset_hostnames.yml
+    
+- name: Import HOSTS file config
+  when: v_configurehosts is true
+  ansible.builtin.import_tasks: configure_hosts.yml
+    
+- name: Import NTP config
+  when: v_configurentp is true
+  ansible.builtin.import_tasks: configure_ntp.yml
+    
+- name: Import REPO config
+  when: v_configurerepos is true
+  ansible.builtin.import_tasks: configure_repos.yml
+    
+- name: Import Install Packages
+  when: v_installpackages is true
+  ansible.builtin.import_tasks: install_packages.yml
+    
+- name: Import Configure Firewalld tasks
+  when: v_configurefirewalld is true
+  ansible.builtin.import_tasks: configure_firewalld.yml
+    
+
+- name: Import Configure Kernel Params and IPv4 settings
+  when: v_configurekernelparams is true
+  ansible.builtin.import_tasks: configure_kernel_params.yml
+    
+
+- name: Import Disable SWAP task
+  when: v_disableswap is true
+  ansible.builtin.import_tasks: disable_swap.yml
+
+- name: Import Reboot task
+  when: v_reboot is true
+  ansible.builtin.import_tasks: reboot.yml
+
+- name: Import Kube Cluster initialization tasks
+  when: v_initk8s is true
+  ansible.builtin.import_tasks: init_k8s.yml
+
+- name: Import Kube Cluster initialization tasks
+  when: v_joinworkers is true
+  ansible.builtin.import_tasks: join_worker_node.yml
+
+- name: Import automation user kube setup
+  ansible.builtin.import_tasks: configure_regular_user.yml
+
+- name: Import Configure Calico CNI
+  when: v_configcalico is true
+  ansible.builtin.import_tasks: config_calico.yml
+
+- name: Import Configure HELM for Kubernetes
+  when: v_configurehelm is true
+  ansible.builtin.import_tasks: configure_helm.yml
+
+- name: Import Setup NGinx Ingress Controller
+  when: v_configure_nginx_ingress is true
+  ansible.builtin.import_tasks: configure_nginx-ingress-controller.yml
+
+#- name: Import Configure Kubernetes Dashboard
+#  when: v_configdashboard is true
+#  ansible.builtin.import_tasks: deploy_kube_dashboard.yml
+#

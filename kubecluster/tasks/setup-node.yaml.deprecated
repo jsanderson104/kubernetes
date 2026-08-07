@@ -1,0 +1,117 @@
+# Pulled from: https://infotechys.com/install-a-kubernetes-cluster-on-rhel-9/#elementor-toc__heading-anchor-4
+---
+- name: Prepare CentOS 9 for Kube Worker node
+  hosts: control
+  become: true
+  gather_facts: true
+  handlers:
+    - name: sysctl_handler
+      ansible.builtin.shell: sysctl -p --system
+  tasks:
+    - name: Create Kubernetes Repo file
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/kubernetes.repo
+        content: |
+                 [kubernetes]
+                 name=Kubernetes
+                 baseurl=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/
+                 enabled=1
+                 gpgcheck=1
+                 gpgkey=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/repodata/repomd.xml.key
+ 
+    - name: Create Docker-CE Repo file
+      ansible.builtin.uri:
+         url:  https://download.docker.com/linux/centos/docker-ce.repo
+         dest: /etc/yum.repos.d/
+         owner: root
+         group: root
+         mode: 0644
+
+    - name: DNF Cache refresh
+      ansible.builtin.shell: yum clean all && yum makecache
+
+    - name: Install Packages
+      loop:
+        - kubernetes-cni
+        - containerd.io 
+        - kubelet 
+        - kubeadm
+        - kubectl
+      ansible.builtin.dnf:
+         name: "{{item}}"
+         state: present
+         disable_excludes: true
+
+    - name: Set Kernel Modules at Boot Time
+      ansible.builtin.copy:
+        dest: /etc/modules-load.d/kubernetes.conf
+        content: |
+                  br_netfilter
+                  ip_vs
+                  ip_vs_rr
+                  ip_vs_wrr
+                  ip_vs_sh
+                  overlay
+
+    - name: Set SysCtl Parameters at Boot Time (IPv4 Routing)
+      notify: sysctl_handler
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/kubernetes.conf
+        content: |
+                  net.ipv4.ip_forward = 1
+                  net.bridge.bridge-nf-call-ip6tables = 1
+                  net.bridge.bridge-nf-call-iptables = 1
+
+    - name: Disable SWAP
+      ansible.builtin.shell: swapoff -a && sed -ie '/swap/s/^/#/g' /etc/fstab
+
+    - name: Add ports to Firewall 
+      loop:
+          - 6443/tcp
+          - 2379/tcp
+          - 2380/tcp
+          - 10250/tcp
+          - 10251/tcp
+          - 10252/tcp
+          - 10255/tcp
+          - 5473/tcp
+      ansible.posix.firewalld:
+        state: enabled
+        permanent: true
+        port: "{{item}}"
+
+    - name: Start Kubelet service
+      loop:
+        - kubelet
+        - containerd
+      ansible.builtin.service:
+        name: "{{item}}"
+        state: restarted
+        enabled: true
+
+    - name: Docker Pull Kube Master images to Control Plane node
+      when: " 'control' in inventory_hostname"
+      ansible.builtin.shell: kubeadm config images pull
+      register: kubeadm_controlplaneinit
+
+    - name: View Results
+      when: " 'control' in inventory_hostname"
+      ansible.builtin.debug: 
+        var: kubeadm_controlplaneinit
+
+    - name: Kubeadm Initialize POD network
+      when: " 'control' in inventory_hostname"
+      ansible.builtin.shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+      register: kubeadm_podnetinit
+
+    - name: View Results of Initialization of Master
+      when: " 'control' in inventory_hostname"
+      ansible.builtin.debug: 
+        var: kubeadm_podnetinit
+
+    - name: Add KUBECONFIG env var to root bashrc
+      when: " 'control' in inventory_hostname"
+      ansible.builtin.lineinfile: 
+        name: /root/.bashrc
+        line: export KUBECONFIG=/etc/kubernetes/admin.conf
+        state: present

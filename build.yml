@@ -1,0 +1,34 @@
+---
+- name: Build a 4-Node Kubernetes cluster with containerd runtime cri.
+  hosts: kubecluster
+  become: true
+  gather_facts: true
+  vars:
+   pod_net_cidr: 10.100.0.0/16
+   service_net_cidr: 10.200.0.0/16
+   cidr_block_size: 24  # Chunks of IP's to allocate when deploying services/pods
+   service_dns_domain: k8s.home.lab  # Internal Cluster domain
+
+   control_plane: control # Master node's hostname. Do not change this until its tested.
+
+   # VARS below here are internal to the role and are for testing purposes only. Dependencies are not complete.
+   v_reset_hostnames: True  # If you want to set all of your cluster in the same domain and register with FQDN's (preferred)
+   v_configurehosts: True   # Edit the ../kubecluter/templates/hosts.j2 to fit your home lab.
+   v_configurentp: True
+   v_configurerepos : True
+   v_installpackages : True
+   v_configurefirewalld : True
+   v_configurekernelparams : True
+   v_disableswap : True
+   v_reboot : True
+   v_initk8s : True
+   v_joinworkers: True
+   v_configcalico: True
+   v_configurehelm: True
+   v_configure_nginx_ingress: True
+   v_configdashboard: False
+   nginx_ingress_task_timeout:     #seconds
+
+  roles:
+    - kubecluster
+

@@ -1,0 +1,6 @@
+---
+
+- name: sysctl_handler
+  ansible.builtin.service:
+     name: systemd-sysctl
+     state: restarted

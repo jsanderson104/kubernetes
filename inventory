@@ -1,0 +1,19 @@
+[kubecluster]
+control	ansible_host=192.168.1.76
+worker1	ansible_host=192.168.1.169
+worker2	ansible_host=192.168.1.170
+worker3	ansible_host=192.168.1.171
+
+
+[master]
+control
+
+[workers]
+worker1
+worker2
+worker3
+
+
+[ubuntu-cloud]
+ubuntu.lab	ansible_host=34.31.12.100
+ubuntu24.lab	ansible_host=35.222.126.207

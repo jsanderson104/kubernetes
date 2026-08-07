@@ -1,0 +1,8 @@
+---
+- name: Join command
+  ansible.builtin.shell:  hostname |grep control || kubeadm join {{control_plane_fqdn}}:6443 --token {{hostvars['control']['token']}} 2>&1|tee /var/log/kube-join.log
+  register: cmd
+
+- name: Print output of join
+  ansible.builtin.debug:
+     var: cmd.stdout

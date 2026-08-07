@@ -1,0 +1,17 @@
+---
+- name: Copy Calico base config file to each node in Cluster
+  ansible.builtin.copy:
+    src: tigera-operator.yaml
+    dest: /home/automation
+    owner: automation
+    group: automation
+    mode: 0644
+    
+- name: Configure Calico Addon/Plugin within Kubernetes
+  ansible.builtin.shell: kubectl create -f /home/automation/tigera-operator.yaml
+  register: cni_setup_cmd
+
+- name: DEBUG CALICO SETUP
+  ansible.builtin.debug:
+    var: cni_setup_cmd
+

@@ -1,0 +1,12 @@
+---
+- name: PREPARE | Install needed packages
+  loop:
+    - kubernetes-cni
+    - containerd.io
+    - kubelet
+    - kubeadm
+    - kubectl
+  ansible.builtin.dnf:
+     name: "{{item}}"
+     state: present
+     disable_excludes: true

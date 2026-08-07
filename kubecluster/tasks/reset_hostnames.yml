@@ -1,0 +1,8 @@
+---
+- name: Set FQDN and hostname of nodes as represented by the inventory file
+  ansible.builtin.shell:  hostnamectl set-hostname {{inventory_hostname}}.{{service_dns_domain}}
+  
+- name: Set FQDN and hostname of nodes as represented by the inventory file
+  ansible.builtin.shell:  echo  {{inventory_hostname}}.{{service_dns_domain}} > /etc/hostname
+
+  
