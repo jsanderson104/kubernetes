@@ -7,27 +7,27 @@
    pod_net_cidr: 10.100.0.0/16
    service_net_cidr: 10.200.0.0/16
    cidr_block_size: 24  # Chunks of IP's to allocate when deploying services/pods
-   service_dns_domain: k8s.home.lab  # Internal Cluster domain
+   service_dns_domain: lab.sanderson.com  # Internal Cluster domain
 
    control_plane: control # Master node's hostname. Do not change this until its tested.
 
    # VARS below here are internal to the role and are for testing purposes only. Dependencies are not complete.
    v_reset_hostnames: True  # If you want to set all of your cluster in the same domain and register with FQDN's (preferred)
    v_configurehosts: True   # Edit the ../kubecluter/templates/hosts.j2 to fit your home lab.
-   v_configurentp: True
-   v_configurerepos : True
-   v_installpackages : True
-   v_configurefirewalld : True
-   v_configurekernelparams : True
-   v_disableswap : True
-   v_reboot : True
-   v_initk8s : True
-   v_joinworkers: True
-   v_configurecalico: True
-   v_configurehelm: True
-   v_configureheadlamp: True
-   v_configurehaproxy: True
-   v_joinipadomain: False    # Under-Construction
+   v_configurentp: True     # Points at time.google.com
+   v_configurerepos : True  # Setup DNF repos for CRI packages
+   v_installpackages : True # Install CRi and supporting packages
+   v_configurefirewalld : True  # Configure firewalld for k8s cluster communication
+   v_configurekernelparams : True  # read it yourself
+   v_disableswap : True      # Keep OS from swapping to disk
+   v_reboot : True           # Reboot if you want but not required
+   v_initk8s : True          # Begin initializing and installing the K8s control plane on masters
+   v_joinworkers: True       # Join the kubernetes worker nodes to the cluster control plane "masters"
+   v_configurecalico: True   # Install and setup Calico CNI on the cluster
+   v_configurehelm: True     # Configure HELM so we can add HELM chart repos to install components into the cluster
+   v_configureheadlamp: True # Install and setup HeadLamp K8S WEB User Interface. Need firefox installed on the master node and browse to 127.0.0.1:8080
+   v_configurehaproxy: True  # Install and setup HAPRoxy as an Ingress controller. Still figuring out how HAProxy works in the cluster so I can write code for it.
+   v_joinipadomain: True    # Under-Construction
 
   roles:
     - kubecluster
