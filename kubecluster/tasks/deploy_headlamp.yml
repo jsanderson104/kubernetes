@@ -1,0 +1,61 @@
+---
+- name: HEADLAMP | Add HeadLamp repo
+  become: false
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.shell: /usr/local/helm/bin/helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+  register: helm_add_repo
+
+- name: HEADLAMP | Helm Add Kube Dashboard repo
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.debug:
+    var: helm_add_repo
+
+- name: HEADLAMP | Deploy Headlamp
+  become: false
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.shell: /usr/local/helm/bin/helm install headlamp headlamp/headlamp --namespace kube-system
+  register: deploy_dashboard
+
+
+- name: DEBUG | Deploy Dashboard
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.debug:
+    var: deploy_dashboard
+
+- name: Copy ClusterRole file
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.copy:
+    src: headlamp-user.yml
+    dest: /home/automation/
+    owner: automation
+    group: automation
+    mode: 0644
+
+- name: HEADLAMP | Deploy ClusterRole file in Kubernetes
+  when: " inventory_hostname in groups['master'] "
+  become: false
+  ansible.builtin.shell: kubectl apply -f /home/automation/headlamp-user.yml
+  register: deploy_clusterrole
+
+- name: DEBUG | Deploy ClusterRole in Kubernetes
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.debug:
+    var: deploy_clusterrole
+
+- name: Retrieve LOGIN TOKEN for HeadLamp
+  when: " inventory_hostname in groups['master'] "
+  become: false
+  ansible.builtin.shell: 'kubectl create token headlamp --namespace kube-system'
+  register: dashboard_login_token
+
+
+- name: DEBUG | HEADLAMP login token
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.debug:
+    msg: "=========== TOKEN = {{dashboard_login_token}}  ========"
+
+- name: DEBUG | Create KubeCluster Port-forward
+  when: " inventory_hostname in groups['master'] "
+  ansible.builtin.debug:
+    msg: " =========== RUN kubectl port-forward --namespace kube-system service/headlamp 8080:80 ======="
+

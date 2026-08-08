@@ -1,0 +1,29 @@
+---
+- name: Generate a K8S token to join the cluster.
+  hosts: all
+  gather_facts: true
+  become: false
+  vars_prompt:
+    - name: control_node
+      prompt: Enter Control node Inventory name
+      private: false
+      
+    - name: worker_node
+      prompt: Enter Invetory Name of host to join to K8S
+      private: false
+  tasks:
+    - name: Get token
+      when: inventory_hostname == control_node
+      ansible.builtin.shell: kubeadm token generate --print-join-command
+      register: token
+   
+    - name: JOIN | Nodes to Control-Plane
+      when: " inventory_hostname in groups['workers'] and inventory_hostname == worker_node "
+      ansible.builtin.shell: kubeadm join {{control_node}}:6443 --discovery-token-unsafe-skip-ca-verification  --token {{token.stdout}}  2>&1|tee /var/log/kube-join.log
+      register: cmd
+
+    - name: DEBUG | JOIN output
+      when: " inventory_hostname in groups['workers'] and inventory_hostname == worker_node "
+      ansible.builtin.debug:
+        var: cmd.stdout
+

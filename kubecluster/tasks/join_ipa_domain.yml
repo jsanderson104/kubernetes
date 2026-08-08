@@ -1,0 +1,40 @@
+---
+- name: Install IPA client
+  ansible.builtin.dnf:
+     name: ipa-client
+     state: latest
+
+- name: Setup Firewall for IPA
+  with_items:
+    - "80/tcp"
+    - "88/tcp"
+    - "389/tcp"
+    - "88/udp"
+    - "389/udp"
+    - "464/tcp"
+    - "464/udp"
+    - "123/udp"
+    - "123/tcp"
+  ansible.posix.firewalld:
+     port: "{{item}}"
+     state: enabled
+     permanent: true
+     immediate: true
+
+- name: Hosts file entry for IPA servers
+  with_items:
+    - "192.168.1.201   ipa1.lab.sanderson.com   ipa1"
+    - "192.168.1.145   ipa2.lab.sanderson.com   ipa2"
+  ansible.builtin.lineinfile:
+     path: /etc/hosts
+     backup: true
+     line: "{{item}}"
+
+- name: Setup Crypto Policy to FIPS:AD-SUPPORT
+  ansible.builtin.shell: update-crypto-policies --set FIPS:AD-SUPPORT
+
+- name: REBOOT
+  ansible.builtin.reboot:
+
+- name: Configure IPA client
+  ansible.builtin.shell: ipa-client-install --server={{ipaserver}}.{{domain}} --domain={{domain}} --realm={{domain|upper}} --mkhomedir --no-ntp --principal=admin  -w {{joinpw}} --unattended

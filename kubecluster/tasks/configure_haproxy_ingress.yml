@@ -1,0 +1,25 @@
+---
+- name: HELM | Install Helm REPO for HAPROXY
+  ansible.builtin.shell: /usr/local/helm/bin/helm repo add haproxytech https://haproxytech.github.io/helm-charts
+  register: repo_add
+
+- name: DEBUG | HELM REPO ADD
+  ansible.builtin.debug:
+    var: repo_add
+
+- name: HELM | Update Helm REPO Cache
+  ansible.builtin.shell: /usr/local/helm/bin/helm repo update
+  register: repo_refresh
+
+- name: DEBUG | HELM REPO CACHE REFRESH
+  ansible.builtin.debug:
+    var: repo_refresh
+
+- name: HELM | Install HAPROXY 
+  ansible.builtin.shell: helm install haproxy-kubernetes-ingress haproxytech/kubernetes-ingress --create-namespace --namespace haproxy-controller
+  register: haproxy_install
+
+- name: DEBUG | HELM INSTALL HAPROXY
+  ansible.builtin.debug:
+    var: haproxy_install
+

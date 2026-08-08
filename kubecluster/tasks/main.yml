@@ -58,11 +58,14 @@
   when: v_configurehelm is true
   ansible.builtin.import_tasks: configure_helm.yml
 
-- name: Import Setup NGinx Ingress Controller
-  when: v_configure_nginx_ingress is true
-  ansible.builtin.import_tasks: configure_nginx-ingress-controller.yml
-
-#- name: Import Configure Kubernetes Dashboard
-#  when: v_configdashboard is true
-#  ansible.builtin.import_tasks: deploy_kube_dashboard.yml
+- name: Install HEADLAMP via HELM
+  when: v_configheadlamp is true
+  ansible.builtin.import_tasks: deploy_headlamp.yml
 #
+#- name: Install HAPROXY via HELM
+#  when: v_configurehaproxy is True
+#  ansible.builtin.import_tasks: configure_haproxy_ingress.yml
+#
+#- name: Import Join IPA Domain
+#  when: v_joinipa is True
+#  ansible.builtin.import_tasks: join_ipa_domain.yml
