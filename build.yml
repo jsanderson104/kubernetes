@@ -23,11 +23,11 @@
    v_reboot : True
    v_initk8s : True
    v_joinworkers: True
-   v_configcalico: True
+   v_configurecalico: True
    v_configurehelm: True
-   v_configure_nginx_ingress: True
-   v_configdashboard: False
-   nginx_ingress_task_timeout:     #seconds
+   v_configureheadlamp: True
+   v_configurehaproxy: True
+   v_joinipadomain: False    # Under-Construction
 
   roles:
     - kubecluster

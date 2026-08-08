@@ -51,21 +51,21 @@
   ansible.builtin.import_tasks: configure_regular_user.yml
 
 - name: Import Configure Calico CNI
-  when: v_configcalico is true
-  ansible.builtin.import_tasks: config_calico.yml
+  when: v_configurecalico is true
+  ansible.builtin.import_tasks: configure_calico.yml
 
 - name: Import Configure HELM for Kubernetes
   when: v_configurehelm is true
   ansible.builtin.import_tasks: configure_helm.yml
 
 - name: Install HEADLAMP via HELM
-  when: v_configheadlamp is true
-  ansible.builtin.import_tasks: deploy_headlamp.yml
-#
-#- name: Install HAPROXY via HELM
-#  when: v_configurehaproxy is True
-#  ansible.builtin.import_tasks: configure_haproxy_ingress.yml
-#
-#- name: Import Join IPA Domain
-#  when: v_joinipa is True
-#  ansible.builtin.import_tasks: join_ipa_domain.yml
+  when: v_configureheadlamp is true
+  ansible.builtin.import_tasks: configure_headlamp.yml
+
+- name: Install HAPROXY via HELM
+  when: v_configurehaproxy is True
+  ansible.builtin.import_tasks: configure_haproxy_ingress.yml
+
+- name: Import Join IPA Domain
+  when: v_joinipadomain is True
+  ansible.builtin.import_tasks: joinipadomain.yml
