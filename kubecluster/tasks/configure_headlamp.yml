@@ -22,25 +22,25 @@
   ansible.builtin.debug:
     var: deploy_dashboard
 
-- name: Copy ClusterRole file
-  when: " inventory_hostname in groups['master'] "
-  ansible.builtin.copy:
-    src: headlamp-user.yml
-    dest: /home/automation/
-    owner: automation
-    group: automation
-    mode: 0644
+#- name: Copy ClusterRole file
+#  when: " inventory_hostname in groups['master'] "
+#  ansible.builtin.copy:
+#    src: headlamp-user.yml
+#    dest: /home/automation/
+#    owner: automation
+#    group: automation
+#    mode: 0644
 
-- name: HEADLAMP | Deploy ClusterRole file in Kubernetes
-  when: " inventory_hostname in groups['master'] "
-  become: false
-  ansible.builtin.shell: kubectl apply -f /home/automation/headlamp-user.yml
-  register: deploy_clusterrole
+#- name: HEADLAMP | Deploy ClusterRole file in Kubernetes
+#  when: " inventory_hostname in groups['master'] "
+#  become: false
+#  ansible.builtin.shell: kubectl apply -f /home/automation/headlamp-user.yml
+#  register: deploy_clusterrole
 
-- name: DEBUG | Deploy ClusterRole in Kubernetes
-  when: " inventory_hostname in groups['master'] "
-  ansible.builtin.debug:
-    var: deploy_clusterrole
+#- name: DEBUG | Deploy ClusterRole in Kubernetes
+#  when: " inventory_hostname in groups['master'] "
+#  ansible.builtin.debug:
+#    var: deploy_clusterrole
 
 - name: Retrieve LOGIN TOKEN for HeadLamp
   when: " inventory_hostname in groups['master'] "

@@ -30,11 +30,12 @@
      backup: true
      line: "{{item}}"
 
-- name: Setup Crypto Policy to FIPS:AD-SUPPORT
-  ansible.builtin.shell: update-crypto-policies --set FIPS:AD-SUPPORT
 
-- name: REBOOT
-  ansible.builtin.reboot:
+- name: Join IPA server
+  when: ipaserver != ""
+  ansible.builtin.shell: ipa-client-install --server={{ipaserver}} --domain={{domain}} --realm={{domain|upper}} --mkhomedir --no-ntp --principal={{ipausername}}  -w {{joinpw}} --unattended
 
-- name: Configure IPA client
-  ansible.builtin.shell: ipa-client-install --server={{ipaserver}}.{{domain}} --domain={{domain}} --realm={{domain|upper}} --mkhomedir --no-ntp --principal=admin  -w {{joinpw}} --unattended
+- name: Join IPA Domain
+  when: ipaserver == ""
+  ansible.builtin.shell: ipa-client-install --domain={{domain}} --realm={{domain|upper}} --mkhomedir --no-ntp --principal={{ipausername}}  -w {{joinpw}} --unattended
+

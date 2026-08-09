@@ -63,9 +63,13 @@
   ansible.builtin.import_tasks: configure_headlamp.yml
 
 - name: Install HAPROXY via HELM
-  when: v_configurehaproxy is True
+  when: v_configurehaproxy is true
   ansible.builtin.import_tasks: configure_haproxy_ingress.yml
 
+- name: Configure Resolv.conf on Redhat
+  when: v_configureresolvconf is true
+  ansible.builtin.import_tasks: configure_resolvconf.yml
+
 - name: Import Join IPA Domain
-  when: v_joinipadomain is True
+  when: v_joinipadomain is true
   ansible.builtin.import_tasks: joinipadomain.yml

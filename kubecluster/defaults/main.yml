@@ -3,21 +3,25 @@
  pod_net_cidr: 10.200.0.0/16
  service_net_cidr: 10.100.0.0/16
  cidr_block_size: 24  # Chunks of IP's to allocate when deploying services/pods
- service_dns_domain: k8s.sanderson.com
+ service_dns_domain: lab.sanderson.com
  control_plane: control # short-hostname for the master server.
 
- v_reset_hostnames: True
- v_configurehosts: True
- v_configurentp: True
- v_configurerepos : True
- v_installpackages : True
- v_configurefirewalld : True
+ v_reset_hostnames: True      # Set the FQDN of all the K8S nodes to the domain suffix using {{service_dns_domain}}
+ v_configureresolvconf: True  # Needed for IPA clients to find IPA domain using  _srv_ lookups. Assuming the K8S cluster and IPA domain are the same. This role uses the var {{service_dns_domain}} 
+ v_configurehosts: True       # Setup /etc/hosts to bypass DNS during install. Recommended always
+ v_configurentp: True         # Needed for SSL termination, LDAP quereis, etc... Time is important
+ v_configurerepos : True      # Configure DNF repos for installing packages.
+ v_installpackages : True     # Actually install them
+ v_configurefirewalld : True  # Self-explanatory... but for you dense folks, we need to open ports for K8S nodes to communicate
  v_configurekernelparams : True
  v_disableswap : True
- v_reboot : True
+ v_reboot : False
  v_initk8s : True
  v_joinworkers: True
- v_configcalico: True
+ v_configurecalico: True
  v_configurehelm: True
- v_configure_nginx_ingress: True
- v_configdashboard: False
+ v_configureheadlamp: True
+ domain: "{{service_dns_domain}}"
+ ipaserver:  ''
+ ipausername: admin
+ joinpw: 'password'

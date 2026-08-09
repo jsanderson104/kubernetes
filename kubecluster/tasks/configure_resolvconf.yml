@@ -1,0 +1,11 @@
+---
+# Added this play to point the K8S cluster nodes to point to the IPA domain for DNS lookups. If this is disabled, then the IPA Join playbook could fail if the {{ipaserver}} variable is blank or undefined
+- name: Copy Resolv.conf template
+  when: ansible_facts['distribution']|lower == "redhat" or ansible_facts['distribution']|lower == "centos"
+  ansible.builtin.template:
+     src: resolv.conf.j2
+     dest: /etc/resolv.conf
+     owner: root
+     group: root
+     mode: 0644
+
