@@ -1,0 +1,77 @@
+You will need to have some extra collections installed so the Firewalld tasks and SYSCTL/MODPROBE tasks (for flannel install playbook) to work...
+
+# Notice the "-p" option is pointing where to install the collections to.... if you're root then they goto /usr/share/ansible/collections BUT for regular-users you'll need to set a directory somewhere in your home folder and edit/add the "collections_path" in ansible.cfg accordingly.
+
+ansible-galaxy collection install community.general -p collections/
+ansible-galaxy collection install ansible.posix -p collections/
+
+
+# WARNING!!!! ### THERE ARE 2 TASKS TO ENABLE FIPS MODE ON THE K8S CLUSTER WHEN JOINING TO IPA DOMAIN !!!!! #
+# THE IPA SERVERS ARE IN FIPS MODE and THEREFORE THE NODES NEED TO USE A STRONG CIPHER TO JOIN IPA #
+
+
+####### TESTING THE FLANNEL INSTALLATION IS WORKING CAN BE DONE LIKE THIS ####################
+## The PODS are running on their internal networks that are spun up dynamically via flannel. 
+# To see the POD ip's we want to test use the "get pods" cmd below then make note of their IP.
+# Use "kubectl exec [podname] -- ping -c 3 [IP] "
+# The idea here is that we test cross-connectivity of the pods from worker node-to-worker node. ensuring there's "mesh like" connectivity.
+# In the test-flannel.yml file that the role copies to /tmp , you can use that to apply to the cluster that will build the "ping pods" deployment for you to use below:
+# You will need to modify the "replicas" field value to however many worker nodes you have. FYI - the control/master nodes don't get assigned workloads.
+
+[automation@control ~]$ kubectl apply -f test-flannel.yml
+deployment.apps/ping-pods configured
+[automation@control ~]$ kubectl get pods -o wide
+NAME                         READY   STATUS    RESTARTS   AGE   IP           NODE                        NOMINATED NODE   READINESS GATES
+ping-pods-85d7ccc96f-jg554   1/1     Running   0          83s   10.100.3.2   worker3.lab.sanderson.com   <none>           <none>
+ping-pods-85d7ccc96f-q2xpx   1/1     Running   0          83s   10.100.1.5   worker1.lab.sanderson.com   <none>           <none>
+ping-pods-85d7ccc96f-zk6tx   1/1     Running   0          83s   10.100.2.2   worker2.lab.sanderson.com   <none>           <none>
+[automation@control ~]$ kubectl exec ping-pods-85d7ccc96f-jg554 -- ping -c 3 10.100.1.5
+PING 10.100.1.5 (10.100.1.5): 56 data bytes
+64 bytes from 10.100.1.5: icmp_seq=0 ttl=62 time=2.475 ms
+64 bytes from 10.100.1.5: icmp_seq=1 ttl=62 time=1.178 ms
+64 bytes from 10.100.1.5: icmp_seq=2 ttl=62 time=1.862 ms
+--- 10.100.1.5 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 1.178/1.838/2.475/0.530 ms
+[automation@control ~]$ kubectl exec ping-pods-85d7ccc96f-jg554 -- ping -c 3 10.100.2.2
+PING 10.100.2.2 (10.100.2.2): 56 data bytes
+64 bytes from 10.100.2.2: icmp_seq=0 ttl=62 time=2.078 ms
+64 bytes from 10.100.2.2: icmp_seq=1 ttl=62 time=0.681 ms
+64 bytes from 10.100.2.2: icmp_seq=2 ttl=62 time=0.828 ms
+--- 10.100.2.2 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.681/1.196/2.078/0.627 ms
+[automation@control ~]$ kubectl exec ping-pods-85d7ccc96f-jg554 -- ping -c 3 10.100.2.2^C
+[automation@control ~]$ kubectl exec ping-pods-85d7ccc96f-jg554 -^Cping -c 3 10.100.2.2
+[automation@control ~]$ kubectl exec ping-pods-85d7ccc96f-q2xpx -- ping -c 3 10.100.3.2
+PING 10.100.3.2 (10.100.3.2): 56 data bytes
+64 bytes from 10.100.3.2: icmp_seq=0 ttl=62 time=1.092 ms
+64 bytes from 10.100.3.2: icmp_seq=1 ttl=62 time=0.827 ms
+64 bytes from 10.100.3.2: icmp_seq=2 ttl=62 time=1.065 ms
+--- 10.100.3.2 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.827/0.995/1.092/0.119 ms
+[automation@control ~]$ kubectl exec ping-pods-85d7ccc96f-q2xpx -- ping -c 3 10.100.2.2
+PING 10.100.2.2 (10.100.2.2): 56 data bytes
+64 bytes from 10.100.2.2: icmp_seq=0 ttl=62 time=2.049 ms
+64 bytes from 10.100.2.2: icmp_seq=1 ttl=62 time=1.066 ms
+64 bytes from 10.100.2.2: icmp_seq=2 ttl=62 time=0.970 ms
+--- 10.100.2.2 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.970/1.362/2.049/0.488 ms
+##############################################################################################
+
+
+
+
+####################### TEST COREDNS IS RUNNING ###########################
+# Again use the kubectl get pods -o wide cmd to find a container name to use to run the nslookup command on...
+#
+[automation@control ~]$ kubectl exec -it ping-pods-85d7ccc96f-jg554 -- nslookup kubernetes.default
+Server:         10.200.0.10
+Address:        10.200.0.10#53
+
+Name:   kubernetes.default.svc.lab.sanderson.com
+Address: 10.200.0.1
+
+##########################################################################################

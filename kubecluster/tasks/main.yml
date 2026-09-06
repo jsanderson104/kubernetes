@@ -50,26 +50,35 @@
 - name: Import automation user kube setup
   ansible.builtin.import_tasks: configure_regular_user.yml
 
-- name: Import Configure Calico CNI
-  when: v_configurecalico is true
-  ansible.builtin.import_tasks: configure_calico.yml
-
 - name: Import Configure HELM for Kubernetes
   when: v_configurehelm is true
   ansible.builtin.import_tasks: configure_helm.yml
 
-- name: Install HEADLAMP via HELM
-  when: v_configureheadlamp is true
-  ansible.builtin.import_tasks: configure_headlamp.yml
+- name: Import Configure Flannel CNI
+  when: v_configureflannel is true
+  ansible.builtin.import_tasks: configure_flannel_cni.yml
 
-- name: Install HAPROXY via HELM
-  when: v_configurehaproxy is true
-  ansible.builtin.import_tasks: configure_haproxy_ingress.yml
+- name: Import Deploy Flannel Test Pods
+  when: v_deployflanneltestpods is true
+  ansible.builtin.import_tasks: deploy_flannel_testpods.yml
 
-- name: Configure Resolv.conf on Redhat
+- name: Import Install HEADLAMP via HELM
+  when: v_configheadlamp is true
+  ansible.builtin.import_tasks: deploy_headlamp.yml
+ 
+- name: Import FIPS MODE SETUP
+  when: v_configureFIPS is true
+  ansible.builtin.import_tasks: configure_fips.yml
+ 
+
+- name: Import Setting Up Client DNS resolv.conf
   when: v_configureresolvconf is true
   ansible.builtin.import_tasks: configure_resolvconf.yml
 
 - name: Import Join IPA Domain
-  when: v_joinipadomain is true
-  ansible.builtin.import_tasks: joinipadomain.yml
+  when:
+    - v_joinipa is true
+    - v_ipauser|length > 0
+    - v_ipajoinpw|length > 0
+    - v_ipaserver|length > 0
+  ansible.builtin.import_tasks: join_ipa_domain.yml

@@ -13,7 +13,10 @@ worker1
 worker2
 worker3
 
+[google-cloud]
 
-[ubuntu-cloud]
-ubuntu.lab	ansible_host=34.31.12.100
-ubuntu24.lab	ansible_host=35.222.126.207
+
+
+[ipa-servers]
+ipa1      ansible_host=192.168.1.201
+ipa2      ansible_host=192.168.1.145

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ping-pods
+  namespace: default
+  labels:
+    app: ping-pods
+spec:
+  replicas: {{groups['workers']|length}}
+  selector:
+    matchLabels:
+      app: ping-pods
+  template:
+    metadata:
+      labels:
+        app: ping-pods
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - ping-pods
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: tools
+        image: amouat/network-utils
+        command: ["sleep", "infinity"]
+        imagePullPolicy: IfNotPresent

@@ -1,0 +1,9 @@
+---
+- name: get ip address
+  hosts: control
+  become: false
+  gather_facts: true
+  tasks:
+    - name: get ip
+      ansible.builtin.debug:
+        var: ansible_facts['default_ipv4']['address']

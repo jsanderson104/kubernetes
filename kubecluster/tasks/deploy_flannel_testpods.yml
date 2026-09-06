@@ -1,0 +1,12 @@
+---
+- name: Copy "PING PODS" deployment for Testing FLANNEL POD NETWORK manifest to /tmp
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.template:
+     src: test-flannel.yml.j2
+     dest: /tmp/ping-pods-deployment.yml
+     mode: 0644
+
+- name: Apply Manifest to Kubernetes
+  when: " inventory_hostname in groups['master'][0] "
+  become: false
+  ansible.builtin.shell: kubectl apply --validate=false -f /tmp/ping-pods-deployment.yml

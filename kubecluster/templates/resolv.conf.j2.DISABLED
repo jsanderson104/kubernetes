@@ -1,0 +1,4 @@
+search lab.sanderson.com
+{% for host in groups['ipa-servers'] %}
+nameserver {{ hostvars[host]['ansible_facts']['default_ipv4']['address'] }}
+{% endfor %}

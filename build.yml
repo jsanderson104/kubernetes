@@ -1,6 +1,6 @@
 ---
-- name: Build a 4-Node Kubernetes cluster with containerd runtime cri.
-  hosts: kubecluster
+- name: BUILDING KUBERNETES CLUSTER ON REDHAT/ROCKY/CENTOS 
+  hosts: control,workers
   become: true
   gather_facts: true
   vars:
@@ -9,30 +9,64 @@
    cidr_block_size: 24  # Chunks of IP's to allocate when deploying services/pods
    service_dns_domain: lab.sanderson.com  # Internal Cluster domain
 
+   # Need to remove this hack. I've also changed the when statements in the init_k8s.yml playbook to start running tasks on any host in the "master" inventory group and not just when the hostname contains "control".
+   # These changes could introduce problems more specifically when there are more than one master nodes and getting the K8S JOIN TOKEN is called on all of them to retrieve a token for the workers to join.
    control_plane: control # Master node's hostname. Do not change this until its tested.
 
    # VARS below here are internal to the role and are for testing purposes only. Dependencies are not complete.
    v_reset_hostnames: True  # If you want to set all of your cluster in the same domain and register with FQDN's (preferred)
    v_configurehosts: True   # Edit the ../kubecluter/templates/hosts.j2 to fit your home lab.
-   v_configureresolvconf: True
-   v_configurentp: True     # Points at time.google.com
-   v_configurerepos : True  # Setup DNF repos for CRI packages
-   v_installpackages : True # Install CRi and supporting packages
-   v_configurefirewalld : True  # Configure firewalld for k8s cluster communication
-   v_configurekernelparams : True  # read it yourself
-   v_disableswap : True      # Keep OS from swapping to disk
-   v_reboot : False           # Reboot if you want but not required
-   v_initk8s : True          # Begin initializing and installing the K8s control plane on masters
-   v_joinworkers: True       # Join the kubernetes worker nodes to the cluster control plane "masters"
-   v_configurecalico: True   # Install and setup Calico CNI on the cluster
-   v_configurehelm: True     # Configure HELM so we can add HELM chart repos to install components into the cluster
-   v_configureheadlamp: True # Install and setup HeadLamp K8S WEB User Interface. Need firefox installed on the master node and browse to 127.0.0.1:8080
-   v_configurehaproxy: False  # Install and setup HAPRoxy as an Ingress controller. Still figuring out how HAProxy works in the cluster so I can write code for it.
-   v_joinipadomain: True    # Under-Construction
-   ipaserver: ''
-   ipausername: admin       # User with rights to join IPA domain
-   joinpw: 'password'
+   v_configurentp: True
+   v_configurerepos : True
+   v_installpackages : True
+   v_configurefirewalld : True
+   v_configurekernelparams : True
+   v_disableswap : True
+   v_reboot : False
+   v_reboottimeout : 3600  # Default is 6000 (10m)
+   v_initk8s : True
+   v_joinworkers: True
+   v_configurehelm: True
+   v_configureflannel: True
+   v_deployflanneltestpods: True
+   v_configheadlamp: True
+   v_configureFIPS: True                             # My home LAB IPA servers are built with FIPS. NOTE: This FORCES a REBOOT to apply crypto-policies
+   v_configureresolvconf: True                       # My home LAB IPA servers have DNS and I want to use its for K8S service discovery.
+   v_joinipa: True
+   v_ipauser: svc_joinhost
+   v_ipajoinpw: svc_joinhost
+   v_ipaserver: ipa1                                 # Don't put FQDN here. We're assuming the IPA servers are in the same FQDN as our K8S Cluster -aka- "{{service_dns_domain}}". If you must change this edit it at tasks/join_ipa_domain.yml (bottom)
 
-  roles:
-    - kubecluster
+  tasks:
+    - name: PRE-INSTALL BANNER MESSAGE
+      ansible.builtin.pause:
+        prompt: "WARNING: You are about to install a Kubernetes Cluster on your system which involves changing the system in some drastic ways.. Press ENTER to continue or Ctrl+C then 'A' to abort"
 
+    - name: FIPS MODE ENABLED
+      ansible.builtin.pause:
+        prompt: "WARNING: You have the FIPS MODE VARIABLE ENABLED.. Press ENTER to continue or Ctrl+C then 'A' to abort"
+
+    - name: IPA DOMAIN JOIN CONTRADICTION
+      when:
+        - v_configureresolvconf is false
+        - v_joinipa is true
+        - v_ipauser|length < 1
+        - v_ipajoinpw|length < 1
+        - v_ipaserver|length < 1
+      ansible.builtin.pause:
+        prompt: "WARNING: You have the JOIN IPA VARIABLE ENABLED but NO SUPPORTING JOIN INFORMATION..THE JOIN IPA TASKS WILL BE SKIPPED.. Press ENTER to continue or Ctrl+C then 'A' to abort"
+
+    - name: ReConciling IPA JOIN VARIABLE to avoid Role from Failing to Join IPA DOMAIN
+      when:
+        - v_configureresolvconf is false
+        - v_joinipa is true
+        - v_ipauser|length < 1
+        - v_ipajoinpw|length < 1
+        - v_ipaserver|length < 1
+      ansible.builtin.set_fact:
+        v_joinipa: False
+
+    - name: Import role only on REDHAT|ROCKY|CENTOS
+      ansible.builtin.include_role:
+        name: kubecluster
+      when: ansible_facts['distribution']|lower in ["redhat","centos","rocky"] and ansible_facts['distribution_major_version'] == "9"

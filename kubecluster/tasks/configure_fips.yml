@@ -1,0 +1,7 @@
+---
+- name: Setup Crypto Policy to FIPS:AD-SUPPORT
+  ansible.builtin.shell: update-crypto-policies --set FIPS:AD-SUPPORT
+
+- name: REBOOT
+  ansible.builtin.reboot:
+    reboot_timeout: "{{v_reboottimeout}}"

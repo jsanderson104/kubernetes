@@ -1,0 +1,90 @@
+---
+# If your Linux box interfaces are in a different zone other than "public" then you'll need to change that. The goal is to put your ethernet and your pod cni interface into the same zone and enable masquerading as well as kernel ip forwarding.
+# Also in the kube-flannel.yml.j2 template we change the "backend" key from value of "vxlan" (which is default) to "host-gw"
+
+- name: Install and Configure Flannel
+  become: false
+  ansible.builtin.uri:
+     url: https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+     dest: /tmp/kube-flannel.yml
+     mode: 0644
+
+- name: FIREWALL | Open PORTS for Flannel
+  become: true
+  loop:
+    - 8285/udp  # Flannel overlay
+    - 8472/udp  #VxLAN 
+  ansible.posix.firewalld:
+      state: enabled
+      permanent: true
+      port: "{{item}}"
+      immediate: true
+
+- name: ADD Interface CNI0 to Public Firewalld ZONE
+  become: true
+  ansible.posix.firewalld:
+     zone: public
+     interface: cni0
+     state: enabled
+     permanent: true
+     immediate: true
+
+
+- name: Enable masquerading on the external zone
+  become: true
+  ansible.posix.firewalld:
+     zone: public 
+     masquerade: true
+     state: enabled
+     permanent: true
+     immediate: true
+
+- name: Copy Flannel CNI config template to Master node
+  when: " inventory_hostname in groups['master'] "
+  become: false
+  ansible.builtin.template:
+     src: kube-flannel.yml.j2
+     dest: /tmp/kube-flannel.yml
+     mode: 0644
+
+
+- name: Ensure br_netfilter module loads on boot
+  ansible.builtin.copy:
+    content: "br_netfilter\n"
+    dest: /etc/modules-load.d/br_netfilter.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Load br_netfilter module immediately
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Ensure bridge-nf-call-iptables is enabled in sysctl
+  ansible.posix.sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: '1'
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    state: present
+    reload: true
+
+- name: Ensure bridge-nf-call-ip6tables is enabled in sysctl
+  ansible.posix.sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: '1'
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    state: present
+    reload: true
+
+
+- name: Install Flannel CNI config 
+  when: " inventory_hostname in groups['master'] "
+  become: false
+  ansible.builtin.shell: kubectl apply --validate=false -f /tmp/kube-flannel.yml
+  register: flannel_install
+
+
+- name: DEBUG | Review Flannel Install
+  ansible.builtin.debug:
+     var: flannel_install
