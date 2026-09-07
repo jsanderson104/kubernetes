@@ -84,8 +84,8 @@ The Components of the Kubernetes Cluster:
   * <b> Kubelet </b>                 --> <b>Forgot.... where's my book again. It interacts with the CRI for some reason???</b>
   * <b> Flannel CNI </b>             --> This is what enables PODs to talk to other PODs on different nodes. We supply the CIDR for this in the variables.
   * <b> MetalLB LoadBalancer </b>    --> This is what uses the LAN IP range and brokers traffic into the services of the Kubernetes cluster. Otherwise, our K8S applications could never been seen outside the cluster.
-  * <b> Control-Plane </b>           --> This is the brains of the operation -aka- "master" nodes. It does NOT get assigned workloads. It only runs K8S Cluster-specific pods and processes.
-  * <b> CoreDNS </b>                 --> This is what allows a pod to talk to another pod on the same or a different host by container name. Using internal POD cluster IP's to make containers talk to one another isn't stable because if the pod fails and gets restarted the IP will change.
+  * <b> Control-Plane </b>           --> This is the brains of the operation -aka- "master" nodes. 
+  * <b> CoreDNS </b>                 --> This is what allows a pod to talk to another pod on the same or a different host by container name via POD NET
   * <b> HeadLamp </b>                --> This isn't necessary for the Kubernetes Cluster to function at all. This is just a handy addon that gives us a Web Interface to manage/monitor the Cluster with.
 ---
 
