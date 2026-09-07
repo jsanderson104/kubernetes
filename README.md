@@ -1,5 +1,7 @@
 This Repo is a downloadable Ansible Role that will build an On-Prem Kubernetes Cluster on REDHAT/ROCKY/CENTOS 9 Operating System
 
+To EXECUTE the Ansible Role, "bash build.sh" but make sure you understand the lab as described below.
+
 This ANSIBLE ROLE will build a Kubernetes Cluster with 1xMasterNode 3xWorkerNodes (might be scalable using the inventory groups - havent tried it yet)
 This ANSIBLE ROLE also has the ability to Join a FreeIPA domain if you enable the variables and set variables for the server and credentials
 
