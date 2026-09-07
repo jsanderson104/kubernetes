@@ -24,6 +24,9 @@
  v_configheadlamp: True
  v_configureFIPS: True
  v_configureresolvconf: True
+ v_configuremetallb: True
+ v_loadbalancer_iprange: 192.168.1.220-192.168.1.250
+ v_deploydemowebapp: True
  v_joinipa: True
  v_ipauser: 
  v_ipajoinpw: 

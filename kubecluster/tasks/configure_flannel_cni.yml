@@ -1,6 +1,8 @@
 ---
 # If your Linux box interfaces are in a different zone other than "public" then you'll need to change that. The goal is to put your ethernet and your pod cni interface into the same zone and enable masquerading as well as kernel ip forwarding.
 # Also in the kube-flannel.yml.j2 template we change the "backend" key from value of "vxlan" (which is default) to "host-gw"
+# Reference: https://philprime.dev/guides/building-a-production-ready-kubernetes-cluster-from-scratch/lesson-12.html ... Don't forget that this file needs to be modified because we use a custom POD CIDR IP scheme. This is the variable "v_podnetcidr". This file is a template in this role so we can get the variable before applying to cluster.
+# Manifest file was pulled from: https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 
 - name: Install and Configure Flannel
   become: false

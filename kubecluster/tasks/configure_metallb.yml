@@ -1,0 +1,55 @@
+# Installation Guide was pulled from https://blog.andreev.it/2023/10/install-metallb-on-kubernetes-cluster-running-on-vmware-vms-or-bare-metal-server/
+
+---
+- name: Download Metal-LB config from GitHub
+  become: false
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.uri: 
+    url: https://raw.githubusercontent.com/metallb/metallb/v0.13.11/config/manifests/metallb-native.yaml
+    dest: /tmp/metallb-native.yml
+    mode: 0644
+
+- name: Install Metal-LB
+  become: false
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.shell: kubectl apply --validate=false -f /tmp/metallb-native.yml
+  register: install_metallb
+
+- name: DEBUG | Install Metal LoadBalancer
+  become: false
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.debug:
+    var: install_metallb
+
+- name: Export the Kube-proxy ConfigMap so we can modify the "strictARP" setting.
+  become: false
+  when: "inventory_hostname in groups['master'][0]"
+  ansible.builtin.shell: kubectl get configmap kube-proxy -n kube-system -o yaml > /tmp/kube-proxy.configmap 
+
+- name: Modify the value for strictARP in the exported file before re-applying the configmap to cluster
+  become: true
+  when: "inventory_hostname in groups['master'][0]"
+  ansible.builtin.replace:
+      path: /tmp/kube-proxy.configmap
+      regexp: '^.*strictARP.*$'
+      replace: '      strictARP: true'   #This line MUST have 6 spaces in front or the configmap file won't apply.
+
+- name: Apply modified ConfigMap for Kube-proxy with new strictARP value as true
+  become: false
+  when: "inventory_hostname in groups['master'][0]"
+  ansible.builtin.shell: kubectl apply --validate=false -f /tmp/kube-proxy.configmap
+
+- name: Copy MetalLB IP POOL template manifest file to control node
+  become: false
+  when: "inventory_hostname in groups['master'][0]"
+  ansible.builtin.template:
+      src: create-metallb-loadbalancer-ip-pool.yml.j2
+      dest: /tmp/create-metallb-loadbalancer-ip-pool.yml
+      mode: 0644
+
+- name: Configure IP DHCP POOL for Exposing Services outside the cluster
+  become: false
+  when: " inventory_hostname in groups['master'][0] "
+  # putting a sleep in here to see if maybe the pods arent established just yet and fail to answer..
+  ansible.builtin.shell: sleep 60 && kubectl apply --validate=false -f /tmp/create-metallb-loadbalancer-ip-pool.yml
+

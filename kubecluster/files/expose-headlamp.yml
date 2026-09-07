@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: headlamp-external-svc
+  namespace: kube-system # Change this if your Headlamp is deployed in a different namespace
+  labels:
+    app.kubernetes.io/name: headlamp
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4466  # Headlamp default internal port (or 80 if SSL is disabled internally)
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: headlamp # Ensures traffic routes to the Headlamp pods
+

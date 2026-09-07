@@ -1,29 +1,29 @@
 ---
 - name: HEADLAMP | Add HeadLamp repo
   become: false
-  when: " inventory_hostname in groups['master'] "
+  when: " inventory_hostname in groups['master'][0] "
   ansible.builtin.shell: /usr/local/helm/bin/helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
   register: helm_add_repo
 
-- name: HEADLAMP | Helm Add Kube Dashboard repo
-  when: " inventory_hostname in groups['master'] "
+- name: HEADLAMP | Helm Add HeadLamp repo
+  when: " inventory_hostname in groups['master'][0] "
   ansible.builtin.debug:
     var: helm_add_repo
 
 - name: HEADLAMP | Deploy Headlamp
   become: false
-  when: " inventory_hostname in groups['master'] "
+  when: " inventory_hostname in groups['master'][0] "
   ansible.builtin.shell: /usr/local/helm/bin/helm install headlamp headlamp/headlamp --namespace kube-system
   register: deploy_dashboard
 
 
-- name: DEBUG | Deploy Dashboard
-  when: " inventory_hostname in groups['master'] "
+- name: DEBUG | HeadLamp Install results
+  when: " inventory_hostname in groups['master'][0] "
   ansible.builtin.debug:
     var: deploy_dashboard
 
 - name: Copy ClusterRole file
-  when: " inventory_hostname in groups['master'] "
+  when: " inventory_hostname in groups['master'][0] "
   ansible.builtin.copy:
     src: headlamp-user.yml
     dest: /home/automation/
@@ -32,30 +32,47 @@
     mode: 0644
 
 - name: HEADLAMP | Deploy ClusterRole file in Kubernetes
-  when: " inventory_hostname in groups['master'] "
+  when: " inventory_hostname in groups['master'][0] "
   become: false
   ansible.builtin.shell: kubectl apply -f /home/automation/headlamp-user.yml
   register: deploy_clusterrole
 
 - name: DEBUG | Deploy ClusterRole in Kubernetes
-  when: " inventory_hostname in groups['master'] "
+  when: " inventory_hostname in groups['master'][0] "
   ansible.builtin.debug:
     var: deploy_clusterrole
 
 - name: Retrieve LOGIN TOKEN for HeadLamp
-  when: " inventory_hostname in groups['master'] "
+  when: " inventory_hostname in groups['master'][0] "
   become: false
   ansible.builtin.shell: 'kubectl create token headlamp --namespace kube-system'
   register: dashboard_login_token
 
 
 - name: DEBUG | HEADLAMP login token
-  when: " inventory_hostname in groups['master'] "
+  when: " inventory_hostname in groups['master'][0] "
   ansible.builtin.debug:
     msg: "=========== TOKEN = {{dashboard_login_token}}  ========"
 
-- name: DEBUG | Create KubeCluster Port-forward
-  when: " inventory_hostname in groups['master'] "
-  ansible.builtin.debug:
-    msg: " =========== RUN kubectl port-forward --namespace kube-system service/headlamp 8080:80 ======="
+- name: DEBUG | Write HEADLAMP login token master node /tmp
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.lineinfile:
+    create: true
+    backup: false
+    path: /tmp/headlamp-login-token.txt
+    line: "{{dashboard_login_token}}"
 
+
+- name: Copy LoadBalancer Service Manifest for HeadLamp exposure to external
+  become: false
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.copy:
+     src: expose-headlamp.yml
+     dest: /tmp/expose-headlamp.yml
+     mode: 0644
+
+# Create a K8s Cluster resource "service" with a LoadBalancer spec to try to get a LAN IP from MetalLB
+- name: Apply HeadLamp Exposure Manifest to Cluster..
+  when: " inventory_hostname in groups['master'][0] "
+  become: false
+  ansible.builtin.shell: kubectl apply --validate=false -f /tmp/expose-headlamp.yml

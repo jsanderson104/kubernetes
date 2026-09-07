@@ -1,0 +1,38 @@
+---
+- name: BUILDING KUBERNETES CLUSTER ON REDHAT/ROCKY/CENTOS 
+  hosts: control,workers
+  become: true
+  gather_facts: true
+  vars:
+   pod_net_cidr: 10.100.0.0/16
+   service_net_cidr: 10.200.0.0/16
+   cidr_block_size: 24  # Chunks of IP's to allocate when deploying services/pods
+   service_dns_domain: lab.sanderson.com  # Internal Cluster domain
+
+   control_plane: control # Master node's hostname. Do not change this until its tested.
+
+   # VARS below here are internal to the role and are for testing purposes only. Dependencies are not complete.
+   v_reset_hostnames: False  # If you want to set all of your cluster in the same domain and register with FQDN's (preferred)
+   v_configurehosts: False   # Edit the ../kubecluter/templates/hosts.j2 to fit your home lab.
+   v_configurentp: False
+   v_configurerepos : False
+   v_installpackages : False
+   v_configurefirewalld : False
+   v_configurekernelparams : False
+   v_disableswap : False
+   v_reboot : False
+   v_initk8s : False
+   v_joinworkers: False
+   v_configurehelm: False
+   v_configureflannel: False
+   v_deployflanneltestpods: False
+   v_configheadlamp: False
+   v_configureFIPS: True   # My home LAB IPA servers are built with FIPS. NOTE: This FORCES a REBOOT to apply crypto-policies
+   v_joinipa: True
+   v_ipauser: svc_joinhost
+   v_ipajoinpw: svc_joinhost
+   v_ipaserver: ipa1  ## Don't put FQDN here. We're assuming the IPA servers are in the same FQDN as our K8S Cluster -aka- "{{service_dns_domain}}". If you must change this edit it at tasks/join_ipa_domain.yml (bottom)
+
+  roles:
+    - kubecluster
+

@@ -62,6 +62,14 @@
   when: v_deployflanneltestpods is true
   ansible.builtin.import_tasks: deploy_flannel_testpods.yml
 
+- name: Import Install and Configure MetalLB loadbalancer
+  when: v_configuremetallb is true
+  ansible.builtin.import_tasks: configure_metallb.yml
+
+- name: Import Deploy MetalLB DEMO WEBAPP
+  when: v_deploydemowebapp is true
+  ansible.builtin.import_tasks: demo_webapp_loadbalancer.yml
+
 - name: Import Install HEADLAMP via HELM
   when: v_configheadlamp is true
   ansible.builtin.import_tasks: deploy_headlamp.yml
@@ -70,7 +78,6 @@
   when: v_configureFIPS is true
   ansible.builtin.import_tasks: configure_fips.yml
  
-
 - name: Import Setting Up Client DNS resolv.conf
   when: v_configureresolvconf is true
   ansible.builtin.import_tasks: configure_resolvconf.yml

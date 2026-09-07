@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metallb-demo
+spec:
+  replicas: {{groups['workers']|length}}
+  selector:
+    matchLabels:
+      run: metallb-demo
+  template:
+    metadata:
+      labels:
+        run: metallb-demo
+    spec:
+      containers:
+      - name: metallb-demo
+        image: klimenta/serverip
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer
+spec:
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+  type: LoadBalancer
+  selector:
+    run: metallb-demo

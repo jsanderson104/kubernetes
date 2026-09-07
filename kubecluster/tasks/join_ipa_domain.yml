@@ -30,11 +30,5 @@
      backup: true
      line: "{{item}}"
 
-#- name: Setup Crypto Policy to FIPS:AD-SUPPORT
-#  ansible.builtin.shell: update-crypto-policies --set FIPS:AD-SUPPORT
-
-#- name: REBOOT
-#  ansible.builtin.reboot:
-
 - name: Configure IPA client
   ansible.builtin.shell: ipa-client-install --server={{v_ipaserver}}.{{service_dns_domain}} --domain={{service_dns_domain}} --realm={{service_dns_domain|upper}} --mkhomedir --no-ntp --principal={{v_ipauser}}  -w {{v_ipajoinpw}} --unattended

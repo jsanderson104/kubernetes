@@ -1,0 +1,21 @@
+---
+- name: Copy DEMO WEBAPP manifest file to Master node
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.template:
+    src: metallb-demo.yml.j2
+    dest: /tmp/metallb-demo.yml
+    mode: 0644
+
+
+- name: Apply DEMO WebApp Manifest to Cluster
+  become: false
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.shell: kubectl apply --validate=false -f /tmp/metallb-demo.yml
+  register: applydemo
+
+
+- name: DEBUG | INSTALL WEBAPP DEMO results
+  become: false
+  when: " inventory_hostname in groups['master'][0] "
+  ansible.builtin.debug:
+    var: applydemo
