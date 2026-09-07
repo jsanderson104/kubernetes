@@ -8,9 +8,9 @@ To EXECUTE the Ansible Role, "bash build.sh" but make sure you understand the la
 This ANSIBLE ROLE will build a Kubernetes Cluster with 1xMasterNode 3xWorkerNodes (might be scalable using the inventory groups - havent tried it yet)
 This ANSIBLE ROLE also has the ability to Join a FreeIPA domain if you enable the variables and set variables for the server and credentials
 
-<font size="12">I'm using Oracle Virtualbox on my Windows workstation to run all of the VM's talked about here.
+I am using Oracle Virtualbox on my Windows workstation to run all of the VM's talked about here.
 All of the VM's NIC are set to "Promiscuous mode" and they are configured as a "Bridged Adapter" so that the VM's can fully interact with my home LAN
-</font>
+
 ---
 I have a total of 7 VM's running:
 1. ansible "server"
@@ -60,7 +60,7 @@ The Components of the Kubernetes Cluster:
 ---
 
 
-  Let's talk about FIPS mode. The ONLY reason I baned to develop the FIPS stuff in this role was because my current deployment of a FreeIPA cluster was built with FIPS 140.2 enabled and designed to setup a two-way trust to Windows AD domain for SSO logins between domains (beyond this scope, I have that role developed too :) )
+  Let's talk about 'FIPS' mode. The ONLY reason I baned to develop the FIPS stuff in this role was because my current deployment of a FreeIPA cluster was built with FIPS 140.2 enabled and designed to setup a two-way trust to Windows AD domain for SSO logins between domains (beyond this scope, I have that role developed too :) )
   The Kubernetes cluster nodes CENTOS9/RHEL9 default crypto-policy attempts to use a non-FIPS approved cipher when trying to join the FreeIPA servers and automatically fails.
   Therefore, we have to put the cluster in FIPS:AD-SUPPORT crypto policy so the ipa join will be forced at the kernel level to use a stronger cipher to talk to the server (whom is expecting a strong cipher thats not blocked by FIPS)
   sigh... I digress.
