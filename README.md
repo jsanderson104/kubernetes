@@ -54,7 +54,7 @@ Each Future Kubernetes node should have:
 1. Each VM is in the hosts file in this role via a template file
 2. Each VM has a user with full sudo privileges. In my case the user is called "automation"
 3. The "automation" user should be able to password-less ssh to all nodes listed above.
-4. The role provides a hosts file template amongst other templates. Modify that accordingly, best-case the entries in hosts file should match the ansible_host variable in your inventory file.
+4. The role provides a hosts file template. Modify that accordingly. The entries in hosts file should match the ansible_host variable in your inventory file.
 ---
 
 
@@ -83,7 +83,7 @@ The Components of the Kubernetes Cluster:
   * <b> Kube-Proxy </b>              --> The broker of incoming/outgoing operations to the Control-plane API
   * <b> Kubelet </b>                 --> <b>Forgot.... where's my book again. It interacts with the CRI for some reason???</b>
   * <b> Flannel CNI </b>             --> This is what enables PODs to talk to other PODs on different nodes. We supply the CIDR for this in the variables.
-  * <b> MetalLB LoadBalancer </b>    --> This is what uses the LAN IP range and brokers traffic into the services of the Kubernetes cluster. Otherwise, our K8S applications could never been seen outside the cluster.
+  * <b> MetalLB LoadBalancer </b>    --> This is what uses the LAN IP range and brokers traffic into the services of the Kubernetes cluster.
   * <b> Control-Plane </b>           --> This is the brains of the operation -aka- "master" nodes. 
   * <b> CoreDNS </b>                 --> This is what allows a pod to talk to another pod on the same or a different host by container name via POD NET
   * <b> HeadLamp </b>                --> This isn't necessary for the Kubernetes Cluster to function at all. This is just a handy addon that gives us a Web Interface to manage/monitor the Cluster with.
