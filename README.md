@@ -1,6 +1,8 @@
 This Repo is a downloadable Ansible Role that will build an On-Prem Kubernetes Cluster on REDHAT/ROCKY/CENTOS 9 Operating System
 
 To EXECUTE the Ansible Role, "bash build.sh" but make sure you understand the lab as described below.
+*NOTE: It's IMPERATIVE that tasks that are interacting with the Kubernetes cluster via kubectl NEVER run with become=true or they WILL FAIL. In this role, I only configure the automation user with kubernetes credentials.
+* The Kubectl credentials can be modified or add new users to it....it might be in the kubelet.conf file ... can't remember but it's in the code just need to find it and see how its done. 
 
 This ANSIBLE ROLE will build a Kubernetes Cluster with 1xMasterNode 3xWorkerNodes (might be scalable using the inventory groups - havent tried it yet)
 This ANSIBLE ROLE also has the ability to Join a FreeIPA domain if you enable the variables and set variables for the server and credentials
@@ -53,11 +55,19 @@ The Components of the Kubernetes Cluster:
   sigh... I digress.
 
   I also spent a little time developing some playbooks to deploy some test pods for testing the Flannel installation as well as testing the MetalLB load-balancer installation. Both of which are variables that you can turn off easily.
-
+  1) Testing Flannel CNI is working properly (eg - routing pod network traffic across nodes), you can make use of the "ping pods". Hint: 2 commands,  "kubectl get pods -o wide -n default"  -and- "kubectl exec [podname] -- ping -c 3 [IP's from 1st command]. You should be able to ping across worker nodes!
+  2) Testing MetalLB load-balancer is working as expected, you can access the IP for the "Demo Webapp" from your browser and watch the IP's on the page change as MetalLB balances the traffic to the various containers running on different nodes.
+  3) HeadLamp is running also. It is a Web Interface for Managing the Kubernetes Cluster and should have a Kubernetes Service using MetalLB to expose the app to external LAN. Hint: kubectl get svc -o wide --all-namespaces |grep -i headlamp
+  
   More to come... it's late. I think next I'm going to use my Ansible server as a podman host for a Jenkins instance and tie it into this repo and set up a pipeline for deploying/testing the lab..
 
   Eventually move all of this to a VPC in Google Cloud and setup a IPSEC tunnel from home to my VPC. That way I can expand my cluster and lab easily into the cloud for a hybrid cloud approach.
   That's ambitious for 11:15 at night but I'll get there someday in the next month or two, hopefully.
   
+
+# HEADLAMP NOTES:
+If you're wondering how to Login to HeadLamp, you can generate a login token using this command: kubectl create token headlamp -n kube-system
+
+
 
   
